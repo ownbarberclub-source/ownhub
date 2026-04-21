@@ -18,19 +18,19 @@ export async function getSites(): Promise<AppSite[]> {
 
 export async function addSite(site: Omit<AppSite, 'id'>): Promise<AppSite | null> {
   const newId = `site-${crypto.randomUUID()}`;
-  const { data, error } = await supabase.from('hub_sites').insert([{ id: newId, ...site }]).select().single();
+  const { data, error } = await supabaseAdmin.from('hub_sites').insert([{ id: newId, ...site }]).select().single();
   if (error) console.error('Erro addSite:', error);
   return data;
 }
 
 export async function updateSite(id: string, updates: Partial<AppSite>): Promise<void> {
   const { id: _, ...payload } = updates;
-  const { error } = await supabase.from('hub_sites').update(payload).eq('id', id);
+  const { error } = await supabaseAdmin.from('hub_sites').update(payload).eq('id', id);
   if (error) console.error('Erro updateSite:', error);
 }
 
 export async function deleteSite(id: string): Promise<void> {
-  const { error } = await supabase.from('hub_sites').delete().eq('id', id);
+  const { error } = await supabaseAdmin.from('hub_sites').delete().eq('id', id);
   if (error) console.error('Erro deleteSite:', error);
 }
 
