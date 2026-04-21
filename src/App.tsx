@@ -101,7 +101,7 @@ function LoginPage({ onLogin }: { onLogin: (session: LocalSession) => void }) {
             marginBottom: 20,
             overflow: 'hidden', padding: 12
           }}>
-            <img src={Logo} alt="OWN" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src={Logo} alt="OWN" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
           </div>
           <div style={{ fontFamily: "'Titillium Web', sans-serif", fontStyle: 'italic', fontWeight: 900, fontSize: 36, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
             OWN <span style={{ color: '#E10600' }}>HUB</span>
@@ -802,7 +802,7 @@ export default function App() {
               background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6
             }}>
-              <img src={Logo} alt="OWN" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <img src={Logo} alt="OWN" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
             </div>
             <div>
               <div style={{ fontFamily: "'Titillium Web', sans-serif", fontSize: 20, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 1 }}>
