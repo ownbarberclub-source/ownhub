@@ -765,10 +765,13 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     const channel = supabase.channel('realtime-hub-sync')
-      .on('postgres', { event: '*', schema: 'public', table: 'hub_sites' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hub_sites' }, () => {
         loadAllowedSites(session, true);
       })
-      .on('postgres', { event: '*', schema: 'public', table: 'hub_permissions' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hub_permissions' }, () => {
+        loadAllowedSites(session, true);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hub_profiles' }, () => {
         loadAllowedSites(session, true);
       })
       .subscribe();
