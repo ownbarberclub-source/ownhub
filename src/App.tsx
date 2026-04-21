@@ -761,6 +761,24 @@ export default function App() {
     }
   }, []);
 
+  // --- Realtime Sync ---
+  useEffect(() => {
+    if (!session) return;
+    const channel = supabase.channel('realtime-hub-sync')
+      .on('postgres', { event: '*', schema: 'public', table: 'hub_sites' }, () => {
+        loadAllowedSites(session, true);
+      })
+      .on('postgres', { event: '*', schema: 'public', table: 'hub_permissions' }, () => {
+        loadAllowedSites(session, true);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session]);
+
+
   const handleLogin = (s: LocalSession) => {
     setSession(s);
     loadAllowedSites(s);
