@@ -446,34 +446,62 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: `${site.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: site.color, flexShrink: 0 }}>
                   <SiteIcon name={site.icon} size={16} />
                 </div>
-                {editSite?.id === site.id ? (
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                    <input className="input" style={{ fontSize: 12 }} value={editSite.name} onChange={e => setEditSite({ ...editSite, name: e.target.value })} />
-                    <input className="input" style={{ fontSize: 12 }} value={editSite.url} onChange={e => setEditSite({ ...editSite, url: e.target.value })} />
-                    <input className="input" style={{ fontSize: 12 }} value={editSite.description} onChange={e => setEditSite({ ...editSite, description: e.target.value })} />
-                  </div>
-                ) : (
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{site.name}</div>
-                    <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{site.url}</div>
-                  </div>
-                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{site.name}</div>
+                  <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{site.url}</div>
+                </div>
+
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  {editSite?.id === site.id ? (
-                    <>
-                      <button className="btn" style={{ padding: '6px 10px', background: '#22c55e20', color: '#22c55e', fontSize: 11 }} onClick={handleSaveEditSite}><Check size={12} /></button>
-                      <button className="btn btn-ghost" style={{ padding: '6px 10px', fontSize: 11 }} onClick={() => setEditSite(null)}><X size={12} /></button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="btn btn-ghost" style={{ padding: '6px 10px', fontSize: 11 }} onClick={() => setEditSite(site)}><Edit2 size={12} /></button>
-                      <button className="btn btn-danger" style={{ padding: '6px 10px', fontSize: 11 }} onClick={async () => { if (confirm(`Remover "${site.name}"?`)) { await deleteSite(site.id); await loadData(); } }}><Trash2 size={12} /></button>
-                    </>
-                  )}
+                  <button className="btn btn-ghost" style={{ padding: '6px 10px', fontSize: 11 }} onClick={() => setEditSite(site)}><Edit2 size={12} /></button>
+                  <button className="btn btn-danger" style={{ padding: '6px 10px', fontSize: 11 }} onClick={async () => { if (confirm(`Remover "${site.name}"?`)) { await deleteSite(site.id); await loadData(); } }}><Trash2 size={12} /></button>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Modal de edição de site */}
+          {editSite && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 100,
+              background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+              backdropFilter: 'blur(8px)',
+            }}>
+              <div style={{
+                background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20,
+                padding: 32, width: '100%', maxWidth: 500,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <h3 style={{ fontFamily: "'Titillium Web', sans-serif", fontSize: 20, fontStyle: 'italic', fontWeight: 900, textTransform: 'uppercase' }}>
+                    Editar Site: {editSite.name}
+                  </h3>
+                  <button className="btn btn-ghost" onClick={() => setEditSite(null)} style={{ padding: '6px 10px' }}><X size={16} /></button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {[
+                    { label: 'Nome do Site', key: 'name' },
+                    { label: 'URL de Acesso', key: 'url' },
+                    { label: 'Categoria', key: 'category' },
+                    { label: 'Cor (Hex)', key: 'color' },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label style={{ fontSize: 10, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>{f.label}</label>
+                      <input className="input" style={{ fontSize: 13 }} value={(editSite as any)[f.key] || ''} onChange={e => setEditSite({ ...editSite, [f.key]: e.target.value })} />
+                    </div>
+                  ))}
+                  <div>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>Descrição</label>
+                    <textarea className="input" style={{ fontSize: 13, height: 80, resize: 'none', paddingTop: 12 }} value={editSite.description || ''} onChange={e => setEditSite({ ...editSite, description: e.target.value })} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+                  <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveEditSite}><Check size={14} /> Salvar Alterações</button>
+                  <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditSite(null)}><X size={14} /> Cancelar</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

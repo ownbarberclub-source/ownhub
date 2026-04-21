@@ -24,7 +24,8 @@ export async function addSite(site: Omit<AppSite, 'id'>): Promise<AppSite | null
 }
 
 export async function updateSite(id: string, updates: Partial<AppSite>): Promise<void> {
-  const { error } = await supabase.from('hub_sites').update(updates).eq('id', id);
+  const { id: _, ...payload } = updates;
+  const { error } = await supabase.from('hub_sites').update(payload).eq('id', id);
   if (error) console.error('Erro updateSite:', error);
 }
 
