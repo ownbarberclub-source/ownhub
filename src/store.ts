@@ -38,7 +38,7 @@ export async function deleteSite(id: string): Promise<void> {
 // ─────────────────────────────────────────────
 
 export async function getUsers(): Promise<HubUser[]> {
-  const { data, error } = await supabase.from('hub_profiles').select('*');
+  const { data, error } = await supabaseAdmin.from('hub_profiles').select('*');
   if (error) console.error('Erro getUsers:', error);
   return data || [];
 }
