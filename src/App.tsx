@@ -702,8 +702,8 @@ export default function App() {
   const [sites, setSites] = useState<AppSite[]>([]);
   const [isLoadingMain, setIsLoadingMain] = useState(true);
 
-  const loadAllowedSites = async (s: LocalSession) => {
-    setIsLoadingMain(true);
+  const loadAllowedSites = async (s: LocalSession, isBackgroundRefresh = false) => {
+    if (!isBackgroundRefresh) setIsLoadingMain(true);
     try {
       const allSites = await getSites() || [];
       if (s.userRole === 'admin') {
@@ -715,7 +715,7 @@ export default function App() {
     } catch (e) {
       console.error(e);
     } finally {
-      setIsLoadingMain(false);
+      if (!isBackgroundRefresh) setIsLoadingMain(false);
     }
   };
 
@@ -973,7 +973,7 @@ export default function App() {
                 GESTÃO DO <span style={{ color: '#E10600' }}>HUB.</span>
               </h1>
             </div>
-            <AdminPanel session={session} onRefresh={() => loadAllowedSites(session)} />
+            <AdminPanel session={session} onRefresh={() => loadAllowedSites(session, true)} />
           </div>
         )}
       </main>
