@@ -20,7 +20,7 @@
   'use strict';
 
   // ─── Configurações ─────────────────────────────────────────
-  const HUB_URL = 'https://own-hub.vercel.app'; // URL do OWN Hub em produção
+  const HUB_URL = 'https://ownpainel.vercel.app'; // URL do OWN Hub em produção
   const HUB_SESSION_KEY = '@own-hub:session';
   const TOKEN_PARAM = 'hub_token';
   const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 horas
