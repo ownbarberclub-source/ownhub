@@ -289,12 +289,17 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
 
   const loadData = async () => {
     setLoadingConfig(true);
-    const s = await getSites();
-    const u = await getUsers();
-    setSites(s);
-    setUsers(u);
-    setLoadingConfig(false);
-    onRefresh();
+    try {
+      const s = await getSites() || [];
+      const u = await getUsers() || [];
+      setSites(s);
+      setUsers(u);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setLoadingConfig(false);
+      if (onRefresh) onRefresh();
+    }
   };
 
   useEffect(() => {
@@ -699,10 +704,19 @@ export default function App() {
 
   const loadAllowedSites = async (s: LocalSession) => {
     setIsLoadingMain(true);
-    const allSites = await getSites();
-    const allowed = await getUserSites(s.userId);
-    setSites(allSites.filter(site => site.is_active && allowed.includes(site.id)));
-    setIsLoadingMain(false);
+    try {
+      const allSites = await getSites() || [];
+      if (s.userRole === 'admin') {
+         setSites(allSites.filter(site => site.is_active));
+      } else {
+         const allowed = await getUserSites(s.userId) || [];
+         setSites(allSites.filter(site => site.is_active && allowed.includes(site.id)));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingMain(false);
+    }
   };
 
   useEffect(() => {
