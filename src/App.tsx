@@ -25,7 +25,23 @@ const ICON_MAP: Record<string, React.FC<any>> = {
 };
 
 function SiteIcon({ name, size = 20 }: { name: string; size?: number }) {
-  const Icon = ICON_MAP[name] || Globe;
+  const Icon = ICON_MAP[name];
+  
+  if (!Icon || name === 'Globe') {
+    return (
+      <img 
+        src={Logo} 
+        alt="OC" 
+        style={{ 
+          width: size, 
+          height: size, 
+          objectFit: 'contain',
+          filter: 'brightness(0) invert(1)' // Make it white to match the icon style
+        }} 
+      />
+    );
+  }
+  
   return <Icon size={size} />;
 }
 
@@ -378,7 +394,7 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8 }}>
         {[
-          { id: 'sites', label: 'Sites', icon: Globe },
+          { id: 'sites', label: 'Sites', icon: Activity },
           { id: 'users', label: 'Usuários', icon: Users },
         ].map(({ id, label, icon: Icon }) => (
           <button
