@@ -299,7 +299,7 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
   const [showAddUser, setShowAddUser] = useState(false);
 
   const [newSite, setNewSite] = useState<Partial<AppSite>>({
-    name: '', description: '', url: '', icon: 'Globe', color: '#6366f1', category: 'Gestão', is_active: true, order_index: 99, available_roles: ['administrador', 'operador'],
+    name: '', description: '', url: '', icon: 'Globe', color: '#6366f1', category: 'Gestão', is_active: true, order_index: 99, available_roles: ['administrador', 'operador'], skip_sso: false,
   });
 
   const [newUser, setNewUser] = useState<Partial<HubUser> & { password: string }>({
@@ -444,6 +444,10 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>Descrição</label>
                   <input className="input" style={{ fontSize: 13 }} placeholder="Breve descrição do sistema..." value={newSite.description || ''} onChange={e => setNewSite({ ...newSite, description: e.target.value })} />
                 </div>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                  <input type="checkbox" checked={!!newSite.skip_sso} onChange={e => setNewSite({ ...newSite, skip_sso: e.target.checked })} style={{ cursor: 'pointer' }} id="new-skip-sso" />
+                  <label htmlFor="new-skip-sso" style={{ fontSize: 11, fontWeight: 700, color: '#aaa', cursor: 'pointer' }}>Pular Login Automático (SSO)</label>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 <button className="btn btn-primary" style={{ fontSize: 12, padding: '9px 16px' }} onClick={handleSaveNewSite}><Check size={13} /> Salvar</button>
@@ -508,6 +512,10 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
                   <div>
                     <label style={{ fontSize: 10, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>Descrição</label>
                     <textarea className="input" style={{ fontSize: 13, height: 80, resize: 'none', paddingTop: 12 }} value={editSite.description || ''} onChange={e => setEditSite({ ...editSite, description: e.target.value })} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                    <input type="checkbox" checked={!!editSite.skip_sso} onChange={e => setEditSite({ ...editSite, skip_sso: e.target.checked })} style={{ cursor: 'pointer' }} id="edit-skip-sso" />
+                    <label htmlFor="edit-skip-sso" style={{ fontSize: 11, fontWeight: 700, color: '#aaa', cursor: 'pointer' }}>Pular Login Automático (SSO)</label>
                   </div>
                 </div>
 
@@ -812,9 +820,14 @@ export default function App() {
 
   const handleAccessSite = async (site: AppSite) => {
     if (!session) return;
-    const siteRole = await getUserSiteRole(session.userId, site.id);
-    const relayUrl = buildRelayUrl(site.url, session, siteRole);
-    window.open(relayUrl, '_blank', 'noopener');
+    try {
+      const siteRole = await getUserSiteRole(session.userId, site.id);
+      const relayUrl = buildRelayUrl(site.url, session, siteRole, site.skip_sso);
+      window.open(relayUrl, '_blank', 'noopener');
+    } catch (e) {
+      console.error("Access error:", e);
+      window.open(site.url, '_blank', 'noopener');
+    }
   };
 
   const isAdmin = session?.userRole === 'admin';

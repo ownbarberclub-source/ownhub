@@ -13,6 +13,7 @@ export type AppSite = {
   is_active: boolean;
   order_index: number;
   available_roles: string[]; // Funções disponíveis neste site
+  skip_sso?: boolean;
 };
 
 export type HubUser = {

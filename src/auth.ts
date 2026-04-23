@@ -76,16 +76,24 @@ export function isSessionValid(): boolean {
 export function buildRelayUrl(
   baseUrl: string,
   session: LocalSession,
-  siteRole?: string
+  siteRole?: string,
+  skipSso?: boolean
 ): string {
-  const url = new URL(baseUrl);
-  url.searchParams.set('hub_token', session.token);
-  url.searchParams.set('hub_user', session.userEmail);
-  url.searchParams.set('hub_name', session.userName);
-  if (siteRole) url.searchParams.set('hub_role', siteRole);
-  // Inclui senha em base64 para auto-login nos sub-sites
-  if (session.userPassword) {
-    url.searchParams.set('hub_pass', session.userPassword);
+  if (skipSso) return baseUrl;
+  
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set('hub_token', session.token);
+    url.searchParams.set('hub_user', session.userEmail);
+    url.searchParams.set('hub_name', session.userName);
+    if (siteRole) url.searchParams.set('hub_role', siteRole);
+    // Inclui senha em base64 para auto-login nos sub-sites
+    if (session.userPassword) {
+      url.searchParams.set('hub_pass', session.userPassword);
+    }
+    return url.toString();
+  } catch (e) {
+    console.error("Invalid URL in Hub:", baseUrl);
+    return baseUrl;
   }
-  return url.toString();
 }
