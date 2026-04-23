@@ -262,8 +262,11 @@ function SiteCard({ site, onAccess }: { site: AppSite; onAccess: (site: AppSite)
         </p>
       </div>
 
-      <button
-        onClick={e => { e.stopPropagation(); onAccess(site); }}
+      <a
+        href={buildRelayUrl(site.url, getLocalSession()!, 'operador', site.skip_sso)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={e => e.stopPropagation()}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           padding: '12px', borderRadius: 12,
@@ -275,10 +278,11 @@ function SiteCard({ site, onAccess }: { site: AppSite; onAccess: (site: AppSite)
           cursor: 'pointer', transition: 'all 0.2s',
           position: 'relative', zIndex: 1,
           boxShadow: hovered ? `0 4px 16px ${site.color}40` : 'none',
+          textDecoration: 'none'
         }}
       >
         <ExternalLink size={14} /> Acessar Sistema
-      </button>
+      </a>
     </div>
   );
 }
