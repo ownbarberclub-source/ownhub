@@ -331,10 +331,18 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
 
   const handleSaveNewSite = async () => {
     if (!newSite.name || !newSite.url) return;
-    await addSite(newSite as Omit<AppSite, 'id'>);
-    setShowAddSite(false);
-    setNewSite({ name: '', description: '', url: '', icon: 'Globe', color: '#6366f1', category: 'Gestão', is_active: true, order_index: 99, available_roles: ['administrador', 'operador'] });
-    await loadData();
+    try {
+      await addSite(newSite as Omit<AppSite, 'id'>);
+      setShowAddSite(false);
+      setNewSite({ 
+        name: '', description: '', url: '', icon: 'Globe', color: '#6366f1', 
+        category: 'Gestão', is_active: true, order_index: 99, 
+        available_roles: ['administrador', 'operador'], skip_sso: false 
+      });
+      await loadData();
+    } catch (e) {
+      alert("Erro ao salvar novo site. Verifique sua conexão.");
+    }
   };
 
   const handleSaveNewUser = async () => {
@@ -363,9 +371,13 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
 
   const handleSaveEditSite = async () => {
     if (!editSite) return;
-    await updateSite(editSite.id, editSite);
-    setEditSite(null);
-    await loadData();
+    try {
+      await updateSite(editSite.id, editSite);
+      setEditSite(null);
+      await loadData();
+    } catch (e) {
+      alert("Erro ao atualizar site. As alterações podem não ter sido salvas.");
+    }
   };
 
   // Toggle de acesso ao site (mantendo role existente ou usando o padrão)
