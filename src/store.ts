@@ -44,7 +44,7 @@ export async function getUsers(): Promise<HubUser[]> {
   return data || [];
 }
 
-export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, pass: string): Promise<HubUser | null> {
+export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, _pass: string): Promise<HubUser | null> {
   // 1. Cria na Auth do Supabase via Edge Function (Seguro)
   // Nota: O admin client não deve ser usado no frontend.
   // Recomenda-se criar uma Supabase Edge Function 'manage-users' para isso.
@@ -100,6 +100,7 @@ export async function updateUser(id: string, updates: Partial<HubUser>, newPass?
   }
 }
 
+export async function deleteUser(_id: string): Promise<void> {
   // Delete Profile via Edge Function
   console.warn('Exclusão de usuários Auth via frontend desabilitada por segurança.');
   /*
@@ -109,6 +110,7 @@ export async function updateUser(id: string, updates: Partial<HubUser>, newPass?
   */
   // O perfil no banco será deletado se houver ON DELETE CASCADE no DB ligado ao Auth.
 }
+
 
 // ─────────────────────────────────────────────
 //  PERMISSÕES
