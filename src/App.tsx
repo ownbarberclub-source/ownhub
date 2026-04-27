@@ -263,7 +263,7 @@ function SiteCard({ site, onAccess }: { site: AppSite; onAccess: (site: AppSite)
       </div>
 
       <a
-        href={buildRelayUrl(site.url, getLocalSession()!, 'operador', site.skip_sso)}
+        href={buildRelayUrl(site.url, getLocalSession()!, getLocalSession()?.userRole === 'admin' ? 'administrador' : 'operador', site.skip_sso)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}
