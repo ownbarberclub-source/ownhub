@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Scissors, BarChart3, Users, Star, LogOut, Settings, Plus, Trash2,
-  ChevronRight, Shield, Globe, Edit2, Check, X, Eye, EyeOff,
+  ChevronRight, ChevronUp, ChevronDown, Shield, Globe, Edit2, Check, X, Eye, EyeOff,
   Lock, User, Zap, Building2, LayoutGrid, ExternalLink,
   AlertTriangle, Activity
 } from 'lucide-react';
@@ -380,6 +380,30 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
     }
   };
 
+  const reorderSite = async (siteId: string, direction: 'up' | 'down') => {
+    const currentIndex = sites.findIndex(s => s.id === siteId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sites.length) return;
+
+    const newSites = [...sites];
+    const [movedSite] = newSites.splice(currentIndex, 1);
+    newSites.splice(targetIndex, 0, movedSite);
+
+    // Update state immediately for UX
+    setSites(newSites);
+
+    try {
+      // Update order_index for all affected sites in DB
+      const updates = newSites.map((s, idx) => updateSite(s.id, { order_index: idx }));
+      await Promise.all(updates);
+    } catch (e) {
+      console.error('Erro ao reordenar:', e);
+      await loadData(); // Reverte em caso de erro
+    }
+  };
+
   // Toggle de acesso ao site (mantendo role existente ou usando o padrão)
   const toggleSiteAccess = (site: AppSite) => {
     const hasAccess = userPerms.some(p => p.siteId === site.id);
@@ -488,6 +512,24 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <button 
+                      className="btn btn-ghost" 
+                      style={{ padding: '2px 4px', fontSize: 10, height: 'auto', minHeight: 0 }}
+                      disabled={sites.indexOf(site) === 0}
+                      onClick={() => reorderSite(site.id, 'up')}
+                    >
+                      <ChevronUp size={12} />
+                    </button>
+                    <button 
+                      className="btn btn-ghost" 
+                      style={{ padding: '2px 4px', fontSize: 10, height: 'auto', minHeight: 0 }}
+                      disabled={sites.indexOf(site) === sites.length - 1}
+                      onClick={() => reorderSite(site.id, 'down')}
+                    >
+                      <ChevronDown size={12} />
+                    </button>
+                  </div>
                   <button className="btn btn-ghost" style={{ padding: '6px 10px', fontSize: 11 }} onClick={() => setEditSite(site)}><Edit2 size={12} /></button>
                   <button className="btn btn-danger" style={{ padding: '6px 10px', fontSize: 11 }} onClick={async () => { if (confirm(`Remover "${site.name}"?`)) { await deleteSite(site.id); await loadData(); } }}><Trash2 size={12} /></button>
                 </div>
