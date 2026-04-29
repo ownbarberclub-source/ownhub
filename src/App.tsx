@@ -348,7 +348,11 @@ function AdminPanel({ session, onRefresh }: { session: LocalSession; onRefresh: 
   const handleSaveNewUser = async () => {
     if (!newUser.name || !newUser.email || !newUser.password) return;
     const initials = newUser.name!.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-    await addUser({ name: newUser.name!, email: newUser.email!, role: newUser.role as any, avatar_initials: initials, is_active: true }, newUser.password);
+    const result = await addUser({ name: newUser.name!, email: newUser.email!, role: newUser.role as any, avatar_initials: initials, is_active: true }, newUser.password);
+    if (!result) {
+      // O erro já é exibido via alert dentro de addUser
+      return;
+    }
     setShowAddUser(false);
     setNewUser({ name: '', email: '', role: 'operator', avatar_initials: '', is_active: true, password: '' });
     await loadData();

@@ -4,6 +4,7 @@
 // =============================================================
 
 import { supabase } from './lib/supabase';
+import { supabaseAdmin } from './lib/supabaseAdmin';
 import type { AppSite, HubUser, UserPermission } from './types';
 
 // ─────────────────────────────────────────────
@@ -44,71 +45,90 @@ export async function getUsers(): Promise<HubUser[]> {
   return data || [];
 }
 
-export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, _pass: string): Promise<HubUser | null> {
-  // 1. Cria na Auth do Supabase via Edge Function (Seguro)
-  // Nota: O admin client não deve ser usado no frontend.
-  // Recomenda-se criar uma Supabase Edge Function 'manage-users' para isso.
-  /*
-  const { data: response, error: authErr } = await supabase.functions.invoke('manage-users', {
-    body: { action: 'create', email: user.email, password: pass }
-  });
-  if (authErr) return null;
-  const authUserId = response.id;
-  */
+export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, pass: string): Promise<HubUser | null> {
+  try {
+    // 1. Cria o usuário no Supabase Auth via Admin API
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+      email: user.email,
+      password: pass,
+      email_confirm: true,
+    });
 
-  // Por enquanto, como medida de segurança, o cadastro de novos usuários AUTH 
-  // deve ser feito via scripts Node.js (create_admin.cjs) até que a Edge Function seja implantada.
-  console.warn('Criação de usuários Auth via frontend desabilitada por segurança.');
-  return null;
+    if (authErr) {
+      console.error('Erro ao criar usuário Auth:', authErr.message);
+      alert(`Erro ao criar usuário: ${authErr.message}`);
+      return null;
+    }
 
-  // 2. Cria Profile (Abaixo apenas como referência caso use a Edge Function acima)
-  const newUser = {
-    id: 'placeholder-id', // authUserId,
-    name: user.name,
-    role: user.role,
-    avatar_initials: user.avatar_initials,
-    is_active: user.is_active,
-  };
+    const authUserId = authData.user.id;
 
-  const { data, error: profileErr } = await supabase.from('hub_profiles').insert([newUser]).select().single();
-  if (profileErr) console.error('Erro criar Profile:', profileErr);
-  return data;
+    // 2. Cria o Profile na tabela hub_profiles
+    const newProfile = {
+      id: authUserId,
+      name: user.name,
+      role: user.role,
+      avatar_initials: user.avatar_initials,
+      is_active: user.is_active,
+    };
+
+    const { data, error: profileErr } = await supabaseAdmin.from('hub_profiles').insert([newProfile]).select().single();
+
+    if (profileErr) {
+      console.error('Erro ao criar Profile:', profileErr);
+      // Se falhou o profile, tenta remover o auth user criado
+      await supabaseAdmin.auth.admin.deleteUser(authUserId);
+      alert('Erro ao criar perfil do usuário. Tente novamente.');
+      return null;
+    }
+
+    return data;
+  } catch (e: any) {
+    console.error('Erro inesperado addUser:', e);
+    alert(`Erro inesperado: ${e.message}`);
+    return null;
+  }
 }
 
 export async function updateUser(id: string, updates: Partial<HubUser>, newPass?: string): Promise<void> {
   // Update Profile
-  await supabase.from('hub_profiles').update({
+  await supabaseAdmin.from('hub_profiles').update({
     name: updates.name,
     role: updates.role,
     is_active: updates.is_active
   }).eq('id', id);
 
-  // Update Pass ou Email (Via Edge Function)
-  /*
-  const authUpdates: any = {};
+  // Update Auth (senha e/ou email) via Admin API
+  const authUpdates: Record<string, string> = {};
   if (updates.email) authUpdates.email = updates.email;
   if (newPass) authUpdates.password = newPass;
 
   if (Object.keys(authUpdates).length > 0) {
-    await supabase.functions.invoke('manage-users', {
-      body: { action: 'update', id, ...authUpdates }
-    });
-  }
-  */
-  if (newPass || updates.email) {
-    console.warn('Atualização de Auth (senha/email) via frontend desabilitada por segurança.');
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
+    if (error) {
+      console.error('Erro ao atualizar Auth:', error.message);
+      alert(`Erro ao atualizar credenciais: ${error.message}`);
+    }
   }
 }
 
-export async function deleteUser(_id: string): Promise<void> {
-  // Delete Profile via Edge Function
-  console.warn('Exclusão de usuários Auth via frontend desabilitada por segurança.');
-  /*
-  const { error } = await supabase.functions.invoke('manage-users', {
-    body: { action: 'delete', id }
-  });
-  */
-  // O perfil no banco será deletado se houver ON DELETE CASCADE no DB ligado ao Auth.
+export async function deleteUser(id: string): Promise<void> {
+  try {
+    // 1. Remove permissões do usuário
+    await supabaseAdmin.from('hub_permissions').delete().eq('user_id', id);
+
+    // 2. Remove o profile
+    await supabaseAdmin.from('hub_profiles').delete().eq('id', id);
+
+    // 3. Remove o usuário do Auth
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+    if (error) {
+      console.error('Erro ao deletar usuário Auth:', error.message);
+      alert(`Erro ao remover usuário: ${error.message}`);
+    }
+  } catch (e: any) {
+    console.error('Erro inesperado deleteUser:', e);
+    alert(`Erro inesperado: ${e.message}`);
+  }
 }
 
 
