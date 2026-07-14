@@ -1085,39 +1085,29 @@ export default function App() {
             </div>
 
             {/* Faixa marquee */}
-            <div style={{
-              overflow: 'hidden', background: '#E10600',
-              padding: '10px 0', marginBottom: 48,
-              borderTop: '3px solid #000', borderBottom: '3px solid #000',
-              marginLeft: -24, marginRight: -24,
-            }}>
-              <div className="animate-marquee">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 28, paddingRight: 28 }}>
-                    <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
-                      OWN HUB
-                    </span>
-                    <Scissors size={14} color="#000" />
-                    <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
-                      Portal de Sistemas
-                    </span>
-                    <Zap size={14} color="#000" />
-                    {activeCampaign && (
-                      <>
-                        <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
-                          Campanha: {activeCampaign.name}
-                        </span>
-                        <Star size={14} color="#000" />
-                        <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
-                          {closedSubscriptionsCount} Assinaturas Vendidas
-                        </span>
-                        <Zap size={14} color="#000" />
-                      </>
-                    )}
-                  </div>
-                ))}
+            {activeCampaign && (
+              <div style={{
+                overflow: 'hidden', background: '#E10600',
+                padding: '10px 0', marginBottom: 48,
+                borderTop: '3px solid #000', borderBottom: '3px solid #000',
+                marginLeft: -24, marginRight: -24,
+              }}>
+                <div className="animate-marquee">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 28, paddingRight: 28 }}>
+                      <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
+                        Campanha: {activeCampaign.name}
+                      </span>
+                      <Star size={14} color="#000" />
+                      <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
+                        {closedSubscriptionsCount} Assinaturas Vendidas
+                      </span>
+                      <Zap size={14} color="#000" />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Sites por categoria */}
             {sites.length === 0 ? (
