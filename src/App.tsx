@@ -818,6 +818,58 @@ export default function App() {
   const [view, setView] = useState<'dashboard' | 'admin'>('dashboard');
   const [sites, setSites] = useState<AppSite[]>([]);
   const [isLoadingMain, setIsLoadingMain] = useState(true);
+  const [activeCampaign, setActiveCampaign] = useState<{ id: string; name: string } | null>(null);
+  const [closedSubscriptionsCount, setClosedSubscriptionsCount] = useState<number>(0);
+
+  const loadCampaignStats = async () => {
+    try {
+      const { data: campaignData, error: campaignErr } = await supabase
+        .from('campaigns')
+        .select('id, name')
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (campaignErr) {
+        console.error("Error fetching active campaign:", campaignErr);
+        return;
+      }
+
+      if (!campaignData) {
+        setActiveCampaign(null);
+        setClosedSubscriptionsCount(0);
+        return;
+      }
+
+      setActiveCampaign(campaignData);
+
+      const { data: recordsData, error: recordsErr } = await supabase
+        .from('referral_records')
+        .select('contacts')
+        .eq('campaign_id', campaignData.id);
+
+      if (recordsErr) {
+        console.error("Error fetching referral records:", recordsErr);
+        return;
+      }
+
+      let count = 0;
+      if (recordsData) {
+        recordsData.forEach(record => {
+          const contacts = record.contacts;
+          if (Array.isArray(contacts)) {
+            contacts.forEach((c: any) => {
+              if (c.status === 'converted' || c.subscriptionClosed) {
+                count++;
+              }
+            });
+          }
+        });
+      }
+      setClosedSubscriptionsCount(count);
+    } catch (err) {
+      console.error("Error loading campaign stats:", err);
+    }
+  };
 
   const loadAllowedSites = async (s: LocalSession, isBackgroundRefresh = false) => {
     if (!isBackgroundRefresh) setIsLoadingMain(true);
@@ -841,6 +893,7 @@ export default function App() {
     if (s && s.expiresAt > Date.now()) {
       setSession(s);
       loadAllowedSites(s);
+      loadCampaignStats();
     } else {
       setIsLoadingMain(false);
       clearLocalSession();
@@ -860,6 +913,12 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'hub_profiles' }, () => {
         loadAllowedSites(session, true);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => {
+        loadCampaignStats();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_records' }, () => {
+        loadCampaignStats();
+      })
       .subscribe();
 
     return () => {
@@ -871,6 +930,7 @@ export default function App() {
   const handleLogin = (s: LocalSession) => {
     setSession(s);
     loadAllowedSites(s);
+    loadCampaignStats();
   };
 
   const handleLogout = async () => {
@@ -1042,6 +1102,18 @@ export default function App() {
                       Portal de Sistemas
                     </span>
                     <Zap size={14} color="#000" />
+                    {activeCampaign && (
+                      <>
+                        <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
+                          Campanha: {activeCampaign.name}
+                        </span>
+                        <Star size={14} color="#000" />
+                        <span style={{ fontFamily: "'Titillium Web', sans-serif", fontWeight: 900, fontStyle: 'italic', fontSize: 20, textTransform: 'uppercase', color: '#000', whiteSpace: 'nowrap' }}>
+                          {closedSubscriptionsCount} Assinaturas Vendidas
+                        </span>
+                        <Zap size={14} color="#000" />
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
