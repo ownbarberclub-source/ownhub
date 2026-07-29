@@ -4,7 +4,6 @@
 // =============================================================
 
 import { supabase } from './lib/supabase';
-import { supabaseAdmin } from './lib/supabaseAdmin';
 import type { AppSite, HubUser, UserPermission } from './types';
 
 // ─────────────────────────────────────────────
