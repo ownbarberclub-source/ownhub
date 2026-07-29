@@ -47,16 +47,15 @@ export async function getUsers(): Promise<HubUser[]> {
 
 export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, pass: string): Promise<HubUser | null> {
   try {
-    // 1. Cria o usuário no Supabase Auth via Admin API
-    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+    // 1. Cria o usuário no Supabase Auth via signUp (padrão cliente)
+    const { data: authData, error: authErr } = await supabase.auth.signUp({
       email: user.email,
       password: pass,
-      email_confirm: true,
     });
 
-    if (authErr) {
-      console.error('Erro ao criar usuário Auth:', authErr.message);
-      alert(`Erro ao criar usuário: ${authErr.message}`);
+    if (authErr || !authData.user) {
+      console.error('Erro ao criar usuário Auth:', authErr?.message);
+      alert(`Erro ao criar usuário: ${authErr?.message || 'Falha no cadastro'}`);
       return null;
     }
 
@@ -71,12 +70,10 @@ export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, pass: st
       is_active: user.is_active,
     };
 
-    const { data, error: profileErr } = await supabaseAdmin.from('hub_profiles').insert([newProfile]).select().single();
+    const { data, error: profileErr } = await supabase.from('hub_profiles').insert([newProfile]).select().single();
 
     if (profileErr) {
       console.error('Erro ao criar Profile:', profileErr);
-      // Se falhou o profile, tenta remover o auth user criado
-      await supabaseAdmin.auth.admin.deleteUser(authUserId);
       alert('Erro ao criar perfil do usuário. Tente novamente.');
       return null;
     }
@@ -90,20 +87,25 @@ export async function addUser(user: Omit<HubUser, 'id' | 'created_at'>, pass: st
 }
 
 export async function updateUser(id: string, updates: Partial<HubUser>, newPass?: string): Promise<void> {
-  // Update Profile
-  await supabaseAdmin.from('hub_profiles').update({
+  // Update Profile na tabela hub_profiles
+  const { error: profileErr } = await supabase.from('hub_profiles').update({
     name: updates.name,
     role: updates.role,
     is_active: updates.is_active
   }).eq('id', id);
 
-  // Update Auth (senha e/ou email) via Admin API
-  const authUpdates: Record<string, string> = {};
-  if (updates.email) authUpdates.email = updates.email;
-  if (newPass) authUpdates.password = newPass;
+  if (profileErr) {
+    console.error('Erro ao atualizar Profile:', profileErr.message);
+    alert(`Erro ao atualizar perfil: ${profileErr.message}`);
+  }
 
-  if (Object.keys(authUpdates).length > 0) {
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
+  // Se o próprio usuário atualizar sua senha/email:
+  if (newPass || updates.email) {
+    const authUpdates: Record<string, string> = {};
+    if (updates.email) authUpdates.email = updates.email;
+    if (newPass) authUpdates.password = newPass;
+
+    const { error } = await supabase.auth.updateUser(authUpdates);
     if (error) {
       console.error('Erro ao atualizar Auth:', error.message);
       alert(`Erro ao atualizar credenciais: ${error.message}`);
@@ -114,16 +116,13 @@ export async function updateUser(id: string, updates: Partial<HubUser>, newPass?
 export async function deleteUser(id: string): Promise<void> {
   try {
     // 1. Remove permissões do usuário
-    await supabaseAdmin.from('hub_permissions').delete().eq('user_id', id);
+    await supabase.from('hub_permissions').delete().eq('user_id', id);
 
     // 2. Remove o profile
-    await supabaseAdmin.from('hub_profiles').delete().eq('id', id);
-
-    // 3. Remove o usuário do Auth
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+    const { error } = await supabase.from('hub_profiles').delete().eq('id', id);
     if (error) {
-      console.error('Erro ao deletar usuário Auth:', error.message);
-      alert(`Erro ao remover usuário: ${error.message}`);
+      console.error('Erro ao deletar perfil:', error.message);
+      alert(`Erro ao remover perfil: ${error.message}`);
     }
   } catch (e: any) {
     console.error('Erro inesperado deleteUser:', e);
